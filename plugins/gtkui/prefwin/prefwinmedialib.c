@@ -39,6 +39,7 @@ static DB_mediasource_t *medialib_plugin;
 static ddb_medialib_plugin_api_t *medialib_api;
 static GtkTreeView *treeview;
 static int _listener_id;
+static GtkColorButton *ml_sel_color_btn = NULL;
 
 static void
 _reload_data (void) {
@@ -156,6 +157,28 @@ _listener (ddb_mediasource_event_type_t _event, void *user_data) {
     });
 }
 
+#define ML_SEL_COLOR_KEY "gtkui.medialib.selection_color"
+#define ML_SEL_COLOR_DEFAULT "#EEB50A"
+
+#if GTK_CHECK_VERSION(3, 0, 0)
+
+static void
+on_ml_sel_color_set (GtkColorButton *btn, gpointer user_data) {
+    GdkRGBA color;
+    gtk_color_chooser_get_rgba (GTK_COLOR_CHOOSER (btn), &color);
+
+    char buf[32];
+    // store as #RRGGBB (ignore alpha)
+    snprintf (buf, sizeof (buf), "#%02X%02X%02X",
+              (int)(color.red   * 255.0 + 0.5),
+              (int)(color.green * 255.0 + 0.5),
+              (int)(color.blue  * 255.0 + 0.5));
+
+    deadbeef->conf_set_str (ML_SEL_COLOR_KEY, buf);
+    deadbeef->conf_save ();
+}
+#endif
+
 void
 prefwin_init_medialib (GtkWidget *_prefwin) {
     prefwin = _prefwin;
@@ -191,8 +214,32 @@ prefwin_init_medialib (GtkWidget *_prefwin) {
     GtkWidget *button_remove = lookup_widget(prefwin, "button_medialib_remove_folder");
 
 #if GTK_CHECK_VERSION(3, 0, 0)
-    gtk_button_set_image(GTK_BUTTON(button_add), gtk_image_new_from_icon_name("list-add-symbolic", GTK_ICON_SIZE_BUTTON));
-    gtk_button_set_image(GTK_BUTTON(button_remove), gtk_image_new_from_icon_name("list-remove-symbolic", GTK_ICON_SIZE_BUTTON));
+    gtk_button_set_image(GTK_BUTTON(button_add),
+        gtk_image_new_from_icon_name("list-add-symbolic", GTK_ICON_SIZE_BUTTON));
+    gtk_button_set_image(GTK_BUTTON(button_remove),
+        gtk_image_new_from_icon_name("list-remove-symbolic", GTK_ICON_SIZE_BUTTON));
+
+    // === NEW: lookup + init Media Library selection colour button ===
+    GtkWidget *w_color = lookup_widget(prefwin, "colorbutton_medialib_selection");
+    if (w_color) {
+        ml_sel_color_btn = GTK_COLOR_BUTTON (w_color);
+
+        char buf[64];
+        deadbeef->conf_get_str (ML_SEL_COLOR_KEY,
+                                ML_SEL_COLOR_DEFAULT,
+                                buf, sizeof (buf));
+
+        GdkRGBA color;
+        if (!gdk_rgba_parse (&color, buf)) {
+            gdk_rgba_parse (&color, ML_SEL_COLOR_DEFAULT);
+        }
+
+        gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (ml_sel_color_btn), &color);
+
+        g_signal_connect (ml_sel_color_btn, "color-set",
+            G_CALLBACK (on_ml_sel_color_set), NULL);
+    }
+    // === END NEW ===
 #endif
 
     g_signal_connect((gpointer)enable_button, "toggled", G_CALLBACK (_enable_did_toggle), prefwin);

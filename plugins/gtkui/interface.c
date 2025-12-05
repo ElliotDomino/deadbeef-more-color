@@ -1744,6 +1744,8 @@ create_prefwin (void)
   GtkWidget *label100;
   GtkWidget *vbox55;
   GtkWidget *toggle_medialib_on;
+  // Look maw! Im breaking the rules!
+  GtkWidget *colorbutton_medialib_selection; // MANUAL: medialib selection color
   GtkWidget *hseparator7;
   GtkWidget *label174;
   GtkWidget *vbox56;
@@ -2822,6 +2824,15 @@ create_prefwin (void)
   gtk_widget_show (toggle_medialib_on);
   gtk_box_pack_start (GTK_BOX (vbox55), toggle_medialib_on, FALSE, FALSE, 0);
 
+  // Breaking more rules!!!
+  // MANUAL: Media Library selection color picker
+  colorbutton_medialib_selection = gtk_color_button_new ();
+  gtk_widget_show (colorbutton_medialib_selection);
+  gtk_box_pack_start (GTK_BOX (vbox55),
+                      colorbutton_medialib_selection,
+                      FALSE, FALSE, 0);
+  
+
   hseparator7 = gtk_hseparator_new ();
   gtk_widget_show (hseparator7);
   gtk_box_pack_start (GTK_BOX (vbox55), hseparator7, FALSE, FALSE, 0);
@@ -3776,6 +3787,10 @@ create_prefwin (void)
   GLADE_HOOKUP_OBJECT (prefwin, label100, "label100");
   GLADE_HOOKUP_OBJECT (prefwin, vbox55, "vbox55");
   GLADE_HOOKUP_OBJECT (prefwin, toggle_medialib_on, "toggle_medialib_on");
+  
+  // MANUAL: medialib selection color button
+  GLADE_HOOKUP_OBJECT (prefwin, colorbutton_medialib_selection, "colorbutton_medialib_selection");
+  
   GLADE_HOOKUP_OBJECT (prefwin, hseparator7, "hseparator7");
   GLADE_HOOKUP_OBJECT (prefwin, label174, "label174");
   GLADE_HOOKUP_OBJECT (prefwin, vbox56, "vbox56");

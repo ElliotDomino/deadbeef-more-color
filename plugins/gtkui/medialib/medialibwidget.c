@@ -26,6 +26,10 @@
 #include "../undointegration.h"
 
 extern DB_functions_t *deadbeef;
+
+#define ML_SEL_COLOR_KEY "gtkui.medialib.selection_color"
+#define ML_SEL_COLOR_DEFAULT "#EEB50A"
+
 static DB_mediasource_t *plugin;
 
 typedef struct {
@@ -810,6 +814,26 @@ _pixbuf_cell_did_become_visible (void *ctx, const char *pathstr) {
     return mlv->folder_icon;
 }
 
+#if GTK_CHECK_VERSION(3, 0, 0)
+static void
+ml_get_selection_colors (GdkRGBA *bg, GdkRGBA *fg) {
+    char buf[64];
+
+    // Background colour string (hex) from config
+    deadbeef->conf_get_str (ML_SEL_COLOR_KEY,
+                            ML_SEL_COLOR_DEFAULT,
+                            buf, sizeof (buf));
+
+    if (!gdk_rgba_parse (bg, buf)) {
+        gdk_rgba_parse (bg, ML_SEL_COLOR_DEFAULT);
+    }
+
+    // For now, always use black text – could also make this configurable later
+    gdk_rgba_parse (fg, "#000000");
+}
+#endif
+
+
 ddb_gtkui_widget_t *
 w_medialib_viewer_create (void) {
 
@@ -883,14 +907,16 @@ w_medialib_viewer_create (void) {
     gtk_widget_show (GTK_WIDGET (w->tree));
 
 #if GTK_CHECK_VERSION(3, 0, 0)
-    // Force custom selection colours for the medialib tree
-    GdkRGBA sel_bg = { 238.0/255.0, 181.0/255.0, 10.0/255.0, 1.0 }; // #EEB50A
-    GdkRGBA sel_fg = { 0, 0, 0, 1.0 }; // black
+    GdkRGBA sel_bg;
+    GdkRGBA sel_fg;
+    ml_get_selection_colors (&sel_bg, &sel_fg);
+
     gtk_widget_override_background_color (GTK_WIDGET (w->tree),
         GTK_STATE_FLAG_SELECTED, &sel_bg);
     gtk_widget_override_color (GTK_WIDGET (w->tree),
         GTK_STATE_FLAG_SELECTED, &sel_fg);
 #endif
+  
 
     gtk_container_add (GTK_CONTAINER (scroll), GTK_WIDGET (w->tree));
 
