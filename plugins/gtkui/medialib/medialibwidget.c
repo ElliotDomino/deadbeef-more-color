@@ -812,6 +812,9 @@ _pixbuf_cell_did_become_visible (void *ctx, const char *pathstr) {
 
 ddb_gtkui_widget_t *
 w_medialib_viewer_create (void) {
+
+    g_printerr("w_medialib_viewer_create CALLED\n");
+
     w_medialib_viewer_t *w = calloc (1, sizeof (w_medialib_viewer_t));
 
     w->base.widget = gtk_event_box_new ();
@@ -878,6 +881,16 @@ w_medialib_viewer_create (void) {
     GtkTreeSelection *sel = gtk_tree_view_get_selection (GTK_TREE_VIEW (w->tree));
     gtk_tree_selection_set_mode (sel, GTK_SELECTION_BROWSE);
     gtk_widget_show (GTK_WIDGET (w->tree));
+
+#if GTK_CHECK_VERSION(3, 0, 0)
+    // Force custom selection colours for the medialib tree
+    GdkRGBA sel_bg = { 238.0/255.0, 181.0/255.0, 10.0/255.0, 1.0 }; // #EEB50A
+    GdkRGBA sel_fg = { 0, 0, 0, 1.0 }; // black
+    gtk_widget_override_background_color (GTK_WIDGET (w->tree),
+        GTK_STATE_FLAG_SELECTED, &sel_bg);
+    gtk_widget_override_color (GTK_WIDGET (w->tree),
+        GTK_STATE_FLAG_SELECTED, &sel_fg);
+#endif
 
     gtk_container_add (GTK_CONTAINER (scroll), GTK_WIDGET (w->tree));
 
